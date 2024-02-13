@@ -61,8 +61,8 @@ if __name__ == '__main__':
     # Run the scheduler in an async loop
     loop = asyncio.get_event_loop()
 
-    loop.run_until_complete(send_message())
-    
+    # loop.run_until_complete(send_message())
+
     while True:
         schedule.run_pending()
         time.sleep(1)
