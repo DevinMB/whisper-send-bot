@@ -1,68 +1,72 @@
 import os
 import json
-import schedule
-import time
 import random
-import requests
+import asyncio
+import aiohttp  # Use aiohttp for async HTTP requests
 from datetime import datetime, timedelta
 from telegram import Bot
 from dotenv import load_dotenv
-import asyncio
-
 
 load_dotenv()
 
-bootstrap_servers = [os.getenv('BROKER')]
+bootstrap_servers = os.getenv('BROKER')
 topic_name = os.getenv('TOPIC_NAME')
 bot_token = os.getenv('BOT_TOKEN')
 api_url = os.getenv('API_URL')
 chat_id = os.getenv('CHAT_ID')
 
+
 bot = Bot(token=bot_token)
 
 async def send_message():
-    print("Attempting to send message...")
-    payload = {
-        "seed_text": "baja master boi",
-        "num_generate": random.randint(4, 35)
-    }
-    headers = {'Content-Type': 'application/json'}
+    async with aiohttp.ClientSession() as session:
+        print("Attempting to send message...")
+        payload = {
+            "seed_text": "baja ",
+            "num_generate": random.randint(4, 35)
+        }
+        headers = {'Content-Type': 'application/json'}
 
-    response = requests.post(api_url, json=payload, headers=headers)
-    print(f"API Response Status: {response.status_code}")
-    if response.status_code == 200:
-        message_content = response.json()
+        async with session.post(api_url, json=payload, headers=headers) as response:
+            print(f"API Response Status: {response.status}")
+            if response.status == 200:
+                message_content = await response.json()
 
-        message_text = message_content.get('generated_text', 'Default message') + "\n\n<i>-The Whisperer Bot ❤️</i>"
+                message_text = message_content.get('generated_text', 'Default message') + "\n\n<i>-The Whisperer Bot ❤️</i>"
 
-        print(f"Message to send: {message_text}")
-        telegram_response = await bot.send_message(chat_id=chat_id, text=message_text, parse_mode='HTML')
-        print(f"Telegram Response: {telegram_response}")
-    else:
-        print(f"Failed to get message from API. Status code: {response.status_code}")
+                print(f"Message to send: {message_text}")
+                telegram_response = await bot.send_message(chat_id=chat_id, text=message_text, parse_mode='HTML')
+                print(f"Telegram Response: {telegram_response}")
+            else:
+                print(f"Failed to get message from API. Status code: {response.status}")
 
-
-def schedule_daily_message():
-    # Schedule the message to be sent at a random time between 8 AM and 8 PM
+async def schedule_daily_message():
     now = datetime.now()
     start_time = now.replace(hour=8, minute=0, second=0, microsecond=0)
     end_time = now.replace(hour=20, minute=0, second=0, microsecond=0)
 
-    random_time = start_time + timedelta(seconds=random.randint(0, int((end_time - start_time).total_seconds())))
-    schedule_time = random_time.strftime("%H:%M")
+    # Calculate a random future time between start_time and end_time
+    delta_seconds = (end_time - start_time).total_seconds()
+    random_future_time = start_time + timedelta(seconds=random.randint(0, int(delta_seconds)))
+    print(f"Next message scheduled for {random_future_time.strftime('%Y-%m-%d %H:%M:%S')}")
 
-    schedule.every().day.at(schedule_time).do(send_message)
-    print(f"Message scheduled for {schedule_time}")
+    while True:
+        now = datetime.now()
+        if now >= random_future_time:
+            await send_message()
+
+            next_day = now + timedelta(days=1)
+            start_time = next_day.replace(hour=8, minute=0, second=0, microsecond=0)
+            end_time = next_day.replace(hour=20, minute=0, second=0, microsecond=0)
+
+            delta_seconds = (end_time - start_time).total_seconds()
+            random_future_time = start_time + timedelta(seconds=random.randint(0, int(delta_seconds)))
+
+            print(f"Next message scheduled for {random_future_time.strftime('%Y-%m-%d %H:%M:%S')}")
+        await asyncio.sleep(60)
+
+async def main():
+    await schedule_daily_message()
 
 if __name__ == '__main__':
-    # Schedule the message sending function
-    schedule_daily_message()
-    
-    # Run the scheduler in an async loop
-    loop = asyncio.get_event_loop()
-
-    loop.run_until_complete(send_message())
-    
-    while True:
-        schedule.run_pending()
-        time.sleep(1)
+    asyncio.run(main())
