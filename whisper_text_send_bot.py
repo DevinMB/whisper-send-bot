@@ -33,7 +33,7 @@ async def send_message():
             if response.status == 200:
                 message_content = await response.json()
 
-                message_text = message_content.get('generated_text', 'Default message') + "\n\n<i>-The Whisperer Bot ❤️</i>"
+                message_text = message_content.get('generated_text', 'Default message') + "\n\n<i>-The Whisperer Bot ❤️ v1</i>"
 
                 print(f"Message to send: {message_text}")
                 telegram_response = await bot.send_message(chat_id=chat_id, text=message_text, parse_mode='HTML')
