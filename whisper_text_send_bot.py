@@ -21,14 +21,25 @@ bot = Bot(token=bot_token)
 
 async def send_message():
     async with aiohttp.ClientSession() as session:
-        payload = {"seed_text": "baja ", "num_generate": 5}  # Simplified for demonstration
+        print("Attempting to send message...")
+        payload = {
+            "seed_text": "baja ",
+            "num_generate": random.randint(4, 35)
+        }
         headers = {'Content-Type': 'application/json'}
 
         async with session.post(api_url, json=payload, headers=headers) as response:
+            print(f"API Response Status: {response.status}")
             if response.status == 200:
                 message_content = await response.json()
-                message_text = message_content.get('generated_text', 'Default message') + "\n\n<i>-The Bot</i>"
-                await bot.send_message(chat_id=chat_id, text=message_text, parse_mode='HTML')
+
+                message_text = message_content.get('generated_text', 'Default message') + "\n\n<i>-The Whisperer Bot ❤️</i>"
+
+                print(f"Message to send: {message_text}")
+                telegram_response = await bot.send_message(chat_id=chat_id, text=message_text, parse_mode='HTML')
+                print(f"Telegram Response: {telegram_response}")
+            else:
+                print(f"Failed to get message from API. Status code: {response.status}")
 
 async def schedule_message(active_days):
     while True:
