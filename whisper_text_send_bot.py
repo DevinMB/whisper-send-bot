@@ -15,6 +15,7 @@ bot_token = os.getenv('BOT_TOKEN')
 api_url = os.getenv('API_URL')
 chat_id = os.getenv('CHAT_ID')
 week_schedule = os.getenv('WEEK_SCHEDULE', '')  # Expected format: "1,3,5" for Mon, Wed, Fri
+seed_text = os.getenv('SEED_TEXT')
 
 # Initialize bot
 bot = Bot(token=bot_token)
@@ -23,7 +24,7 @@ async def send_message():
     async with aiohttp.ClientSession() as session:
         print("Attempting to send message...")
         payload = {
-            "seed_text": "baja ",
+            "seed_text": seed_text,
             "num_generate": random.randint(4, 35)
         }
         headers = {'Content-Type': 'application/json'}
