@@ -70,7 +70,7 @@ async def schedule_message(active_days):
             # If today is not an active day, wait until the next day to check again
             next_day = now + timedelta(days=1)
             next_day_start = next_day.replace(hour=0, minute=0, second=0, microsecond=0)  # Midnight, start of the next day
-            print("Will check again next day: {next_day}")
+            print(f"Will check again next day: {next_day}")
             await asyncio.sleep((next_day_start - now).total_seconds())
 
 
